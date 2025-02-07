@@ -39,7 +39,7 @@ class _DashboardWidgetState extends State<DashboardWidget>
 
   Widget _getScreen(int index) {
     switch (index) {
-      case 3:
+      case 4:
         return UsersScreen();
       default:
         return Column(
@@ -173,12 +173,16 @@ class _DashboardWidgetState extends State<DashboardWidget>
               label: 'Home',
             ),
             BottomNavigationBarItem(
+              icon: Icon(Icons.build),
+              label: 'Reparaciones',
+            ),
+            BottomNavigationBarItem(
               icon: Icon(Icons.people),
               label: 'Clientes',
             ),
             BottomNavigationBarItem(
               icon: Icon(Icons.engineering),
-              label: 'Técnicos',
+              label: 'Tecnicos',
             ),
             BottomNavigationBarItem(
               icon: Icon(Icons.person),
