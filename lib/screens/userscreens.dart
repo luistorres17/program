@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '/controllers/authroutes.dart';
 
 class UsersScreen extends StatefulWidget {
   const UsersScreen({super.key});
@@ -8,11 +9,30 @@ class UsersScreen extends StatefulWidget {
 }
 
 class _UsersScreenState extends State<UsersScreen> {
-  List<Map<String, String>> users = [
-    {'usuario': 'admin', 'nombre': 'Administrador', 'rol': 'Admin'},
-    {'usuario': 'user1', 'nombre': 'Usuario Uno', 'rol': 'Empleado'},
-    {'usuario': 'user2', 'nombre': 'Usuario Dos', 'rol': 'Empleado'},
-  ];
+  List<dynamic> users = [];
+  bool isLoading = true; // Estado de carga
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchUsers();
+  }
+
+  Future<void> _fetchUsers() async {
+    try {
+      final authRoutes = AuthRoutes();
+      final fetchedUsers = await authRoutes.listarUsuarios();
+      setState(() {
+        users = fetchedUsers;
+        isLoading = false;
+      });
+    } catch (e) {
+      //print('Error al obtener usuarios: $e');
+      setState(() {
+        isLoading = false;
+      });
+    }
+  }
 
   void _deleteUser(int index) {
     setState(() {
@@ -23,6 +43,7 @@ class _UsersScreenState extends State<UsersScreen> {
   void _showAddUserDialog() {
     TextEditingController usuarioController = TextEditingController();
     TextEditingController nombreController = TextEditingController();
+    TextEditingController correoController = TextEditingController();
     TextEditingController rolController = TextEditingController();
     TextEditingController passwordController = TextEditingController();
 
@@ -43,6 +64,10 @@ class _UsersScreenState extends State<UsersScreen> {
                 decoration: InputDecoration(labelText: 'Nombre'),
               ),
               TextField(
+                controller: correoController,
+                decoration: InputDecoration(labelText: 'Correo'),
+              ),
+              TextField(
                 controller: rolController,
                 decoration: InputDecoration(labelText: 'Rol'),
               ),
@@ -59,14 +84,18 @@ class _UsersScreenState extends State<UsersScreen> {
               child: Text('Cancelar'),
             ),
             TextButton(
-              onPressed: () {
-                setState(() {
-                  users.add({
-                    'usuario': usuarioController.text,
-                    'nombre': nombreController.text,
-                    'rol': rolController.text,
-                  });
+              //cuando se presiona el botón de agregar se mandan los datos a la función crearUsuario de AuthRoutes
+              onPressed: () async {
+                // al presionar el botón de agregar se manda la información a la función crearUsuario de AuthRoutes
+                final authRoutes = AuthRoutes();
+                await authRoutes.crearUsuario({
+                  'usuario': usuarioController.text,
+                  'nombre': nombreController.text,
+                  'correo': correoController.text,
+                  'rol': rolController.text,
+                  'password': passwordController.text,
                 });
+                // ignore: use_build_context_synchronously
                 Navigator.pop(context);
               },
               child: Text('Agregar'),
@@ -84,34 +113,36 @@ class _UsersScreenState extends State<UsersScreen> {
         title: Text('Gestión de Usuarios'),
         backgroundColor: Color(0xFF6F61EF),
       ),
-      body: Padding(
-        padding: EdgeInsets.all(16.0),
-        child: Column(
-          children: [
-            Expanded(
-              child: ListView.builder(
-                itemCount: users.length,
-                itemBuilder: (context, index) {
-                  return Card(
-                    child: ListTile(
-                      title: Text(users[index]['nombre']!),
-                      subtitle: Text('Usuario: ${users[index]['usuario']} - Rol: ${users[index]['rol']}'),
-                      trailing: IconButton(
-                        icon: Icon(Icons.delete, color: Colors.red),
-                        onPressed: () => _deleteUser(index),
-                      ),
+      body: isLoading
+          ? Center(child: CircularProgressIndicator()) // Muestra loading mientras se cargan los datos
+          : Padding(
+              padding: EdgeInsets.all(16.0),
+              child: Column(
+                children: [
+                  Expanded(
+                    child: ListView.builder(
+                      itemCount: users.length,
+                      itemBuilder: (context, index) {
+                        return Card(
+                          child: ListTile(
+                            title: Text(users[index]['nombre'] ?? 'Sin nombre'),
+                            subtitle: Text('Usuario: ${users[index]['usuario']} - Rol: ${users[index]['rol']} - Correo: ${users[index]['correo']}'),
+                            trailing: IconButton(
+                              icon: Icon(Icons.delete, color: Colors.red),
+                              onPressed: () => _deleteUser(index),
+                            ),
+                          ),
+                        );
+                      },
                     ),
-                  );
-                },
+                  ),
+                  ElevatedButton(
+                    onPressed: _showAddUserDialog,
+                    child: Text('Agregar Usuario'),
+                  ),
+                ],
               ),
             ),
-            ElevatedButton(
-              onPressed: _showAddUserDialog,
-              child: Text('Agregar Usuario'),
-            ),
-          ],
-        ),
-      ),
     );
   }
 }

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'dashboard.dart';
+import '/controllers/authlogin.dart';
 
 class LoginWidget extends StatefulWidget {
   const LoginWidget({super.key});
@@ -230,15 +231,35 @@ class _LoginWidgetState extends State<LoginWidget> {
                                   minLines: 1,
                                 ),
                                 ElevatedButton(
-                                  onPressed: () {
-                                    print('Button pressed ...');
-                                    // al precionar el boton se redirige a la pagina de dashboard
-                                    Navigator.push(
-                                      context,
-                                      MaterialPageRoute(
-                                        builder: (context) => DashboardWidget(),
-                                      ),
-                                    );
+                                  onPressed: () async {
+                                    //print('Button pressed ...');
+                                    final String username = _usernameController.text;
+                                    final String password = _passwordController.text;
+                                    try {bool isLoggedIn = await AuthController().login(username, password);
+                                    // si flag es true, entonces navegar a la pantalla de dashboard
+                                    if (isLoggedIn) {
+                                      Navigator.push(
+                                        // ignore: use_build_context_synchronously
+                                        context,
+                                        MaterialPageRoute(
+                                          builder: (context) => DashboardWidget(),
+                                        ),
+                                      );
+                                    }
+
+                                    // si flag es false, mostrar un mensaje de error
+                                    else {
+                                      // ignore: use_build_context_synchronously
+                                      ScaffoldMessenger.of(context).showSnackBar(
+                                        SnackBar(
+                                          content: Text('Error: Usuario o contraseña incorrectos'),
+                                          backgroundColor: Colors.red,
+                                        ),
+                                      );
+                                    }} catch (e) {
+                                      //print('Error: $e');
+                                    }
+                                  
                                     
                                   },
                                   style: ElevatedButton.styleFrom(
